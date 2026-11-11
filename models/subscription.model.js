@@ -78,6 +78,7 @@ const subscriptionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Pre-save middleware to calculate renewal date and update status
 subscriptionSchema.pre("save", function () {
   //auto calculate renewal date if missing
   if (!this.renewalDate) {
@@ -92,6 +93,12 @@ subscriptionSchema.pre("save", function () {
       this.renewalDate.getDate() + renewalPeriods[this.frequency],
     );
   }
+
+  // Update status to 'expired' if renewal date has passed
+  if (this.renewalDate < new Date()) {
+    this.status = "expired";
+  }
+  next();
 }); // function to run before saving a subscription document
 
 const Subscription = mongoose.model("Subscription", subscriptionSchema);
